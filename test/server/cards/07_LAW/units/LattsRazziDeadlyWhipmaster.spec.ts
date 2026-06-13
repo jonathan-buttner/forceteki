@@ -86,5 +86,36 @@ describe('Latts Razzi, Deadly Whipmaster', function() {
                 expect(context.lattsRazziDeadlyWhipmaster.exhausted).toBe(true);
             });
         });
+
+        describe('Latts Razzi\'s when played ability with duplicate unique copies', function() {
+            beforeEach(function () {
+                return contextRef.setupTestAsync({
+                    phase: 'action',
+                    player1: {
+                        hand: ['latts-razzi#deadly-whipmaster'],
+                        groundArena: ['latts-razzi#deadly-whipmaster'],
+                    },
+                    player2: {
+                        groundArena: ['wampa'],
+                    }
+                });
+            });
+
+            it('should not deal damage if the newly played copy is defeated by the uniqueness rule', function () {
+                const { context } = contextRef;
+
+                const lattsCopies = context.player1.findCardsByName('latts-razzi#deadly-whipmaster');
+                const lattsInHand = lattsCopies.find((latts) => latts.zoneName === 'hand');
+                const lattsInPlay = lattsCopies.find((latts) => latts.zoneName === 'groundArena');
+
+                context.player1.clickCard(lattsInHand);
+                context.player1.clickCard(lattsInHand);
+                expect(lattsInHand).toBeInZone('discard');
+                expect(lattsInPlay).toBeInZone('groundArena');
+
+                expect(context.wampa.damage).toBe(0);
+                expect(context.player2).toBeActivePlayer();
+            });
+        });
     });
 });

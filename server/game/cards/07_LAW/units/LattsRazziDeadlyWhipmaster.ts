@@ -21,17 +21,18 @@ export default class LattsRazziDeadlyWhipmaster extends NonLeaderUnitCard {
                     ['Give an Experience token to this unit']: AbilityHelper.immediateEffects.giveExperience(),
                 }
             },
-            then: (thenContext) => ({
+            then: () => ({
                 title: 'Deal damage equal to her power to an enemy ground unit',
+                thenCondition: (context) => context.source.isInPlay(),
                 targetResolver: {
-                    activePromptTitle: `Deal ${thenContext.source.getPower()} damage to an enemy ground unit`,
+                    activePromptTitle: (context) => `Deal ${context.source.getPower()} damage to an enemy ground unit`,
                     controller: RelativePlayer.Opponent,
                     cardTypeFilter: WildcardCardType.Unit,
                     zoneFilter: ZoneName.GroundArena,
-                    immediateEffect: AbilityHelper.immediateEffects.damage({
-                        amount: thenContext.source.getPower(),
-                        source: thenContext.source,
-                    })
+                    immediateEffect: AbilityHelper.immediateEffects.damage((context) => ({
+                        amount: context.source.getPower(),
+                        source: context.source,
+                    }))
                 }
             })
         });
