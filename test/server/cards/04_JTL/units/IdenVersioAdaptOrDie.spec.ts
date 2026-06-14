@@ -77,5 +77,34 @@ describe('Iden Version, Adapt or Die', function() {
                 expect(context.tielnFighter).toHaveExactUpgradeNames(['shield']);
             });
         });
+
+        it('should give a shield to the attached unit if defeated by uniqueness before resolving the trigger', async function() {
+            await contextRef.setupTestAsync({
+                phase: 'action',
+                player1: {
+                    hand: ['iden-versio#adapt-or-die'],
+                    groundArena: ['iden-versio#adapt-or-die'],
+                    spaceArena: ['tieln-fighter']
+                }
+            });
+
+            const { context } = contextRef;
+
+            const idens = context.player1.findCardsByName('iden-versio#adapt-or-die');
+            const idenInHand = idens.find((iden) => iden.zoneName === 'hand');
+            const idenInPlay = idens.find((iden) => iden.zoneName === 'groundArena');
+
+            context.player1.clickCard(idenInHand);
+            context.player1.clickPrompt('Play Iden Versio with Piloting');
+            context.player1.clickCard(context.tielnFighter);
+
+            expect(context.player1).toHavePrompt('Choose which copy of Iden Versio, Adapt or Die to defeat');
+            context.player1.clickCard(idenInHand);
+
+            expect(context.tielnFighter).toHaveExactUpgradeNames(['shield']);
+            expect(idenInHand).toBeInZone('discard');
+            expect(idenInHand).not.toBeAttachedTo(context.tielnFighter);
+            expect(idenInPlay).toBeInZone('groundArena');
+        });
     });
 });
