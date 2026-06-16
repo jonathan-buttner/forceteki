@@ -531,6 +531,30 @@ describe('Damage Modification Effects', function() {
                     expect(context.cartelSpacer).toBeInZone('discard');
                     expect(context.tielnFighter).toBeInZone('discard');
                 });
+
+                it('should stop offering shield replacements after one shield replaces the damage', async function () {
+                    await contextRef.setupTestAsync({
+                        phase: 'action',
+                        player1: {
+                            spaceArena: ['cartel-spacer']
+                        },
+                        player2: {
+                            spaceArena: [{ card: 'tieln-fighter', upgrades: ['shield', 'shield'] }]
+                        }
+                    });
+
+                    const { context } = contextRef;
+                    const startingShields = [...context.tielnFighter.upgrades];
+
+                    context.player1.clickCard(context.cartelSpacer);
+                    context.player1.clickCard(context.tielnFighter);
+
+                    expect(context.cartelSpacer.damage).toBe(2);
+                    expect(context.tielnFighter.damage).toBe(0);
+                    expect(startingShields.filter((shield) => shield.zoneName === 'outsideTheGame').length).toBe(1);
+                    expect(context.tielnFighter.upgrades.length).toBe(1);
+                    expect(context.player2).toBeActivePlayer();
+                });
             });
 
             describe('A unit that increases combat damage to itself', function() {

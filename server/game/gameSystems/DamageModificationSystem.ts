@@ -135,7 +135,11 @@ export class DamageModificationSystem<
         }
     }
 
-    protected override shouldReplace (context: TContext): boolean {
+    protected override shouldReplace (context: TContext, additionalProperties: Partial<TProperties> = {}): boolean {
+        if (!super.shouldReplace(context, additionalProperties)) {
+            return false;
+        }
+
         const properties = this.generatePropertiesFromContext(context);
         if (properties.modificationType === DamageModificationType.Increase || properties.modificationType === DamageModificationType.Multiply) {
             return true;
