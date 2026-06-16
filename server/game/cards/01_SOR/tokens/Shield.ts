@@ -1,5 +1,6 @@
 import type { ICardDataJson } from '../../../../utils/cardData/CardDataInterfaces';
 import type { IAbilityHelper } from '../../../AbilityHelper';
+import type { TriggeredAbilityContext } from '../../../core/ability/TriggeredAbilityContext';
 import type { IUpgradeAbilityRegistrar } from '../../../core/card/AbilityRegistrationInterfaces';
 import { TokenUpgradeCard } from '../../../core/card/TokenCards';
 import { DamageModificationType } from '../../../core/Constants';
@@ -31,13 +32,17 @@ export default class Shield extends TokenUpgradeCard {
     }
 
     public override setupCardAbilities(registrar: IUpgradeAbilityRegistrar, AbilityHelper: IAbilityHelper) {
+        const canReplaceDamage = (context: TriggeredAbilityContext) =>
+            context.source.isUpgrade() &&
+            context.source.isAttached() &&
+            context.event.card === context.source.parentCard;
+
         registrar.addDamageModificationAbility({
             title: 'Defeat Shield to prevent attached unit from taking damage',
-            contextTitle: (context) => `Defeat ${this.title} to prevent ${context.source.parentCard?.title ?? 'attached unit'} from taking damage`,
+            contextTitle: (context) => `Defeat ${this.title} to prevent ${context.source.isAttached() ? context.source.parentCard.title : 'attached unit'} from taking damage`,
             modificationType: DamageModificationType.Replace,
-            shouldCardHaveDamageModification: (card, context) =>
-                context.source.isUpgrade() &&
-                card === context.source.parentCard,
+            canReplace: canReplaceDamage,
+            shouldCardHaveDamageModification: (card, context) => canReplaceDamage(context) && card === context.event.card,
             replaceWithEffect: AbilityHelper.immediateEffects.defeat(),
         });
     }

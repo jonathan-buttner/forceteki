@@ -11,6 +11,7 @@ import { ChatHelpers } from '../core/chat/ChatHelpers';
 
 export interface IReplacementEffectSystemProperties<TContext extends TriggeredAbilityContext> extends IGameSystemProperties {
     effect?: string;
+    canReplace?: (context: TContext) => boolean;
 
     /** The immediate effect to replace the original effect with or `null` to indicate that the original effect should be cancelled with no replacement */
     replacementImmediateEffect?: GameSystem<TContext>;
@@ -117,13 +118,18 @@ export class ReplacementEffectSystem<TContext extends TriggeredAbilityContext = 
     }
 
     protected shouldReplace (context: TContext, additionalProperties: Partial<TProperties> = {}): boolean {
-        return true;
+        const properties = this.generatePropertiesFromContext(context, additionalProperties);
+        return properties.canReplace ? properties.canReplace(context) : true;
     }
 
     public override hasLegalTarget(context: TContext, additionalProperties: Partial<TProperties> = {}, _mustChangeGameState): boolean {
         Contract.assertNotNullLike(context.event);
 
         if (!context.event.canResolve) {
+            return false;
+        }
+
+        if (!this.shouldReplace(context, additionalProperties)) {
             return false;
         }
 

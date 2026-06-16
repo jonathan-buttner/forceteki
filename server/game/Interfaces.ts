@@ -48,6 +48,7 @@ export type IDamageModificationAbilityProps<TSource extends Card = Card> = Omit<
     onlyFromPlayer?: RelativePlayer; // TSTODO - update to accept an array
     damageOfType?: DamageSourceType;
     amount?: number;
+    canReplace?: (context: TriggeredAbilityContext<TSource>) => boolean;
     replaceWithEffect?: GameSystem<TriggeredAbilityContext>;
 
     /**
