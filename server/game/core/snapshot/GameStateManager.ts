@@ -152,6 +152,12 @@ export class GameStateManager implements IGameObjectRegistrar {
                 this.#game.state = v8.deserialize(snapshot.gameState);
 
                 const snapshotStatesByUuid = v8.deserialize(snapshot.states) as Record<string, IGameObjectBaseState>;
+                const missingSnapshotObjects = Object.keys(snapshotStatesByUuid).filter((uuid) => !this.gameObjectMapping.has(uuid));
+                if (missingSnapshotObjects.length > 0) {
+                    throw new Error(
+                        `Snapshot restore cannot hydrate ${missingSnapshotObjects.length} missing game object(s): ${missingSnapshotObjects.slice(0, 20).join(', ')}`
+                    );
+                }
 
                 // Indexes in last to first for the purpose of removal.
                 for (let i = this.allGameObjects.length - 1; i >= 0; i--) {

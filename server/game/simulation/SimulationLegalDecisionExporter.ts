@@ -66,24 +66,26 @@ export class SimulationLegalDecisionExporter {
             }
         }
 
-        for (const displayCard of displayCards) {
-            if (displayCard.selectionState !== 'selectable' && displayCard.selectionState !== 'selected') {
-                continue;
+        if (perCardButtons.length === 0) {
+            for (const displayCard of displayCards) {
+                if (displayCard.selectionState !== 'selectable' && displayCard.selectionState !== 'selected') {
+                    continue;
+                }
+                this.addDecision(decisions, {
+                    id: this.makeDecisionId('display-card', displayCard.cardUuid),
+                    label: `Select ${displayCard.internalName}`,
+                    rawDecision: {
+                        kind: 'display-card',
+                        playerId: player.id,
+                        cardUuid: displayCard.cardUuid,
+                        buttonArg: displayCard.cardUuid,
+                        promptUuid,
+                        method: 'menuButton',
+                    },
+                    sourceCardId: displayCard.cardUuid,
+                    sourceCardName: displayCard.internalName,
+                });
             }
-            this.addDecision(decisions, {
-                id: this.makeDecisionId('display-card', displayCard.cardUuid),
-                label: `Select ${displayCard.internalName}`,
-                rawDecision: {
-                    kind: 'display-card',
-                    playerId: player.id,
-                    cardUuid: displayCard.cardUuid,
-                    buttonArg: displayCard.cardUuid,
-                    promptUuid,
-                    method: 'menuButton',
-                },
-                sourceCardId: displayCard.cardUuid,
-                sourceCardName: displayCard.internalName,
-            });
         }
 
         for (const option of prompt.dropdownListOptions ?? []) {

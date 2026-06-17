@@ -18,7 +18,7 @@ export class SimulationActionApplier {
                 game.menuButton(
                     rawDecision.playerId,
                     rawDecision.value ?? rawDecision.buttonArg,
-                    rawDecision.promptUuid,
+                    this.currentPromptUuid(game, rawDecision),
                     rawDecision.method
                 );
                 break;
@@ -27,7 +27,7 @@ export class SimulationActionApplier {
                     rawDecision.playerId,
                     rawDecision.buttonArg,
                     rawDecision.cardUuid,
-                    rawDecision.promptUuid,
+                    this.currentPromptUuid(game, rawDecision),
                     rawDecision.method
                 );
                 break;
@@ -38,7 +38,7 @@ export class SimulationActionApplier {
                         type: rawDecision.statefulPromptType as any,
                         valueDistribution: rawDecision.cardDistribution ?? [],
                     },
-                    rawDecision.promptUuid
+                    this.currentPromptUuid(game, rawDecision)
                 );
                 break;
             default:
@@ -48,5 +48,9 @@ export class SimulationActionApplier {
         if (this.continueAfterApply) {
             game.continue();
         }
+    }
+
+    private currentPromptUuid(game: Game, decision: SimulationRawDecision): string {
+        return game.getPlayerById(decision.playerId).currentPrompt().promptUuid ?? decision.promptUuid;
     }
 }

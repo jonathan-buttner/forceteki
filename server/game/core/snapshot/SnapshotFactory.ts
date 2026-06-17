@@ -141,10 +141,28 @@ export class SnapshotFactory {
         // TODO: add a guard here that will fail if the current action is already snapshotted,
         // this should be called exactly once per action
 
+        const snapshot = this.buildSnapshotForCurrentTimepoint(timepoint);
+
+        this.lastAssignedSnapshotId = snapshot.id;
+        this.lastAssignedTimepointNumber = snapshot.timepointNumber;
+        this.currentActionSnapshot = snapshot;
+    }
+
+    public createDetachedSnapshotForCurrentTimepoint(timepoint: SnapshotTimepoint): IGameSnapshot {
+        return this.buildSnapshotForCurrentTimepoint(timepoint);
+    }
+
+    public restoreCurrentSnapshot(snapshot: IGameSnapshot): void {
+        this.currentActionSnapshot = snapshot;
+        this.lastAssignedSnapshotId = snapshot.id;
+        this.lastAssignedTimepointNumber = snapshot.timepointNumber;
+    }
+
+    private buildSnapshotForCurrentTimepoint(timepoint: SnapshotTimepoint): IGameSnapshot {
         const nextSnapshotId = this.lastAssignedSnapshotId + 1;
         const nextTimepointNumber = this.lastAssignedTimepointNumber + 1;
 
-        const snapshot: IGameSnapshot = {
+        return {
             id: nextSnapshotId,
             lastGameObjectId: this.gameStateManager.lastGameObjectId,
             actionNumber: this.game.actionNumber,
@@ -158,11 +176,6 @@ export class SnapshotFactory {
             requiresConfirmationToRollback: false,
             activePlayerId: this.game.actionPhaseActivePlayer?.id
         };
-
-        this.lastAssignedSnapshotId = nextSnapshotId;
-        this.lastAssignedTimepointNumber = nextTimepointNumber;
-
-        this.currentActionSnapshot = snapshot;
     }
 
     public setNextSnapshotIsSamePlayer(value: boolean) {

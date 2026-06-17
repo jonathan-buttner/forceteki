@@ -4,7 +4,7 @@ import { SnapshotType } from '../Constants';
 import type { Game } from '../Game';
 import type { IGameObjectRegistrar } from './GameStateManager';
 import { GameStateManager } from './GameStateManager';
-import type { ICanRollBackResult, IRollbackRoundEntryPoint, IRollbackSetupEntryPoint, ISnapshotProperties } from './SnapshotInterfaces';
+import type { ICanRollBackResult, IGameSnapshot, IRollbackRoundEntryPoint, IRollbackSetupEntryPoint, ISnapshotProperties } from './SnapshotInterfaces';
 import { SnapshotTimepoint } from './SnapshotInterfaces';
 import { RollbackEntryPointType, type IGetManualSnapshotSettings, type IGetSnapshotSettings, type IManualSnapshotSettings, type IRollbackResult, type ISnapshotSettings } from './SnapshotInterfaces';
 import { Contract } from '../utils/Contract.js';
@@ -128,6 +128,25 @@ export class SnapshotManager {
         if (this._gameStepsSinceLastUndo != null) {
             this._gameStepsSinceLastUndo++;
         }
+    }
+
+    public createSimulationSnapshot(timepoint: SnapshotTimepoint): IGameSnapshot {
+        return this.snapshotFactory.createDetachedSnapshotForCurrentTimepoint(timepoint);
+    }
+
+    public restoreSimulationSnapshot(snapshot: IGameSnapshot): boolean {
+        const success = this._gameStateManager.rollbackToSnapshot(snapshot);
+        if (!success) {
+            return false;
+        }
+
+        this.snapshotFactory.restoreCurrentSnapshot(snapshot);
+        this.#game.randomGenerator.restore(snapshot.rngState);
+        return true;
+    }
+
+    public getEntryPointForSnapshot(snapshot: Pick<IGameSnapshot, 'phase' | 'timepoint'>): IRollbackSetupEntryPoint | IRollbackRoundEntryPoint {
+        return this.getEntryPointForTimepoint(snapshot.timepoint, snapshot.phase);
     }
 
     public takeSnapshot(settings: ISnapshotSettings): number {
@@ -358,8 +377,12 @@ export class SnapshotManager {
         return offset;
     }
 
-    private getEntryPointAfterRollback(settings: IGetSnapshotSettings): IRollbackSetupEntryPoint | IRollbackRoundEntryPoint {
-        switch (this.currentSnapshottedTimepointType) {
+    private getEntryPointAfterRollback(_settings: IGetSnapshotSettings): IRollbackSetupEntryPoint | IRollbackRoundEntryPoint {
+        return this.getEntryPointForTimepoint(this.currentSnapshottedTimepointType, this.currentSnapshottedPhase);
+    }
+
+    private getEntryPointForTimepoint(timepoint: SnapshotTimepoint, phase: PhaseName): IRollbackSetupEntryPoint | IRollbackRoundEntryPoint {
+        switch (timepoint) {
             case SnapshotTimepoint.Mulligan:
             case SnapshotTimepoint.SetupResource:
                 return {
@@ -378,7 +401,7 @@ export class SnapshotManager {
                     entryPoint: RollbackRoundEntryPoint.WithinRegroupPhase,
                 };
             case SnapshotTimepoint.StartOfPhase:
-                switch (this.currentSnapshottedPhase) {
+                switch (phase) {
                     case PhaseName.Setup:
                         return {
                             type: RollbackEntryPointType.Setup,
@@ -396,7 +419,7 @@ export class SnapshotManager {
                         };
                 }
             case SnapshotTimepoint.EndOfPhase:
-                switch (this.currentSnapshottedPhase) {
+                switch (phase) {
                     case PhaseName.Setup:
                         throw new Error('Rolling back to end of setup phase is not supported (no currently implemented card has end-of-setup-phase effects)');
                     case PhaseName.Action:
@@ -408,7 +431,7 @@ export class SnapshotManager {
                         throw new Error('Rolling back to end of regroup phase is not supported');
                 }
             default:
-                Contract.fail(`Unimplemented snapshot type: ${JSON.stringify(settings)}`);
+                Contract.fail(`Unimplemented snapshot timepoint: ${timepoint}`);
         }
     }
 

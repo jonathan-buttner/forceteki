@@ -1,4 +1,6 @@
 import type { IStatefulPromptResults } from '../core/gameSteps/PromptInterfaces';
+import type { IRollbackRoundEntryPoint, IRollbackSetupEntryPoint } from '../core/snapshot/SnapshotInterfaces';
+import type { SimulationEnvironmentResetOptions } from './SimulationEnvironment';
 
 export type SimulationLegalDecisionKind =
     | 'card-click'
@@ -100,4 +102,51 @@ export interface SimulationDecisionSnapshot {
     playerId: string;
     state: SimulationState;
     legalDecisions: SimulationLegalDecision[];
+}
+
+export interface SimulationActionSlot {
+    actionId: number;
+    decisionId: string;
+    label: string;
+}
+
+export interface SimulationEnvironmentState {
+    currentPlayer: number;
+    currentPlayerId: string | null;
+    isTerminal: boolean;
+    legalActions: number[];
+    actionStrings: Record<string, string>;
+    returns: [number, number];
+    observationTensor: number[];
+    observationTensors: [number[], number[]];
+    state: SimulationState;
+}
+
+export interface SimulationSerializedGameSnapshot {
+    id: number;
+    lastGameObjectId: number;
+    actionNumber: number;
+    roundNumber: number;
+    phase: string;
+    timepoint: string;
+    timepointNumber: number;
+    activePlayerId?: string;
+    gameStateBase64: string;
+    statesBase64: string;
+    rngState: unknown;
+    requiresConfirmationToRollback: boolean;
+    nextSnapshotIsSamePlayer?: boolean;
+}
+
+export interface SimulationCheckpoint {
+    version: 1;
+    resetOptions: SimulationEnvironmentResetOptions;
+    actionHistory: number[];
+    entryPoint: IRollbackSetupEntryPoint | IRollbackRoundEntryPoint;
+    snapshot: SimulationSerializedGameSnapshot;
+    decisionSnapshot: SimulationDecisionSnapshot | null;
+    environmentState: SimulationEnvironmentState;
+    objectManifest: {
+        gameObjectIds: string[];
+    };
 }
