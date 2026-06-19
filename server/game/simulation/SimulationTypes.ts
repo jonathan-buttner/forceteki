@@ -87,6 +87,7 @@ export interface SimulationRawDecision {
 }
 
 export interface SimulationLegalDecision {
+    actionId?: number;
     id: string;
     playerId: string;
     kind: SimulationLegalDecisionKind;
@@ -115,6 +116,7 @@ export interface SimulationEnvironmentState {
     currentPlayerId: string | null;
     isTerminal: boolean;
     legalActions: number[];
+    legalDecisions: SimulationLegalDecision[];
     actionStrings: Record<string, string>;
     returns: [number, number];
     observationTensor: number[];

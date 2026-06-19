@@ -3,6 +3,7 @@ import {
     SimulationActionSlotEncoder,
     SimulationBoundary,
     SimulationEnvironment,
+    SimulationLegalDecisionExporter,
     simulationNumDistinctActions,
     simulationObservationTensorSize,
 } from '../../../server/game/simulation';
@@ -74,6 +75,30 @@ describe('SimulationBoundary', function() {
         expect(chat.messages.map((message) => message.message)).toEqual(['two']);
     });
 
+    it('preserves selected display card state in exported legal decisions', function() {
+        const exporter = new SimulationLegalDecisionExporter();
+        const legalDecisions = exporter.exportForPlayer({
+            id: 'player-0',
+            currentPrompt: () => ({
+                menuTitle: 'Choose a card',
+                promptUuid: 'prompt-1',
+                displayCards: [{
+                    cardUuid: 'card-1',
+                    internalName: 'selected-card',
+                    selectionState: 'selected',
+                }],
+                perCardButtons: [],
+            }),
+            selectableCards: [],
+        } as any);
+
+        const decision = legalDecisions[0];
+        expect(decision).toBeDefined();
+        expect(decision!.card?.uuid).toBe('card-1');
+        expect(decision!.card?.selected).toBeTrue();
+        expect(decision!.card?.selectable).toBeFalse();
+    });
+
     it('resets to deterministic legal action slots and fixed observation tensors', async function() {
         const firstEnvironment = new SimulationEnvironment();
         const secondEnvironment = new SimulationEnvironment();
@@ -89,6 +114,8 @@ describe('SimulationBoundary', function() {
 
         expect(firstState.currentPlayer).toBe(0);
         expect(firstState.legalActions).toEqual(secondState.legalActions);
+        expect(firstState.legalDecisions.map((decision) => decision.actionId)).toEqual(firstState.legalActions);
+        expect(withoutPromptUuids(firstState).legalDecisions).toEqual(withoutPromptUuids(secondState).legalDecisions);
         expect(firstState.observationTensor.length).toBe(simulationObservationTensorSize);
         expect(firstState.observationTensor).toEqual(secondState.observationTensor);
 

@@ -100,6 +100,7 @@ export class SimulationEnvironment {
                 currentPlayerId: null,
                 isTerminal: true,
                 legalActions: [],
+                legalDecisions: [],
                 actionStrings: {},
                 returns: this.returns(),
                 observationTensor: observationTensors[0],
@@ -108,15 +109,26 @@ export class SimulationEnvironment {
             };
         }
 
-        const { slots } = this.actionEncoder.encode(this.snapshot);
+        const { slots, decisionsByActionId } = this.actionEncoder.encode(this.snapshot);
         const currentPlayer = Math.max(0, playerIds.indexOf(this.snapshot.playerId));
         const actionStrings = Object.fromEntries(slots.map((slot) => [String(slot.actionId), slot.label]));
+        const legalDecisions = slots.map((slot) => {
+            const decision = decisionsByActionId.get(slot.actionId);
+            if (!decision) {
+                throw new Error(`Simulation action slot ${slot.actionId} is missing its legal decision`);
+            }
+            return {
+                ...decision,
+                actionId: slot.actionId,
+            };
+        });
 
         return {
             currentPlayer,
             currentPlayerId: this.snapshot.playerId,
             isTerminal: false,
             legalActions: slots.map((slot) => slot.actionId),
+            legalDecisions,
             actionStrings,
             returns: this.returns(),
             observationTensor: observationTensors[currentPlayer],

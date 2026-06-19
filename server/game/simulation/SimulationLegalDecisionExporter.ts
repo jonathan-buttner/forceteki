@@ -62,6 +62,13 @@ export class SimulationLegalDecisionExporter {
                     },
                     sourceCardId: displayCard.cardUuid,
                     sourceCardName: displayCard.internalName,
+                    card: {
+                        uuid: displayCard.cardUuid,
+                        internalName: displayCard.internalName,
+                        name: displayCard.internalName,
+                        selectable: displayCard.selectionState === 'selectable',
+                        selected: displayCard.selectionState === 'selected',
+                    },
                 });
             }
         }
@@ -84,6 +91,13 @@ export class SimulationLegalDecisionExporter {
                     },
                     sourceCardId: displayCard.cardUuid,
                     sourceCardName: displayCard.internalName,
+                    card: {
+                        uuid: displayCard.cardUuid,
+                        internalName: displayCard.internalName,
+                        name: displayCard.internalName,
+                        selectable: displayCard.selectionState === 'selectable',
+                        selected: displayCard.selectionState === 'selected',
+                    },
                 });
             }
         }
