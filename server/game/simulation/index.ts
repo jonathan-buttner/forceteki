@@ -6,7 +6,13 @@ export { SimulationBoundary } from './SimulationBoundary';
 export { SimulationCardEncoder } from './SimulationCardEncoder';
 export { SimulationEnvironment } from './SimulationEnvironment';
 export { SimulationLegalDecisionExporter } from './SimulationLegalDecisionExporter';
-export { SimulationObservationTensorEncoder, simulationObservationTensorSize } from './SimulationObservationTensorEncoder';
+export {
+    SimulationObservationTensorEncoder,
+    simulationCardFeatureCount,
+    simulationCardFeatureOffsets,
+    simulationCardMetadataVocabularies,
+    simulationObservationTensorSize,
+} from './SimulationObservationTensorEncoder';
 export { SimulationStateEncoder } from './SimulationStateEncoder';
 export type {
     SimulationActionSlot,

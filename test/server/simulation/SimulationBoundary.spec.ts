@@ -4,6 +4,10 @@ import {
     SimulationBoundary,
     SimulationEnvironment,
     SimulationLegalDecisionExporter,
+    SimulationObservationTensorEncoder,
+    simulationCardFeatureCount,
+    simulationCardFeatureOffsets,
+    simulationCardMetadataVocabularies,
     simulationNumDistinctActions,
     simulationObservationTensorSize,
 } from '../../../server/game/simulation';
@@ -137,6 +141,125 @@ describe('SimulationBoundary', function() {
         expect(viewerTensor).not.toEqual(opponentTensor);
 
         environment.close();
+    });
+
+    it('encodes revealed structured card metadata without revealing hidden opponent card metadata', function() {
+        const encoder = new SimulationObservationTensorEncoder();
+        const card = {
+            id: '0201864172',
+            internalName: 'adventurer-sniper-rifle',
+            name: 'Adventurer Sniper Rifle',
+            controllerId: 'player-0',
+            ownerId: 'player-0',
+            hp: 0,
+            power: 0,
+            cost: 2,
+            printedHp: 0,
+            printedPower: 0,
+            printedCost: 2,
+            upgradeHp: 0,
+            upgradePower: 0,
+            types: ['upgrade'],
+            aspects: ['vigilance'],
+            traits: ['item', 'weapon'],
+            keywords: [],
+            unique: false,
+            exhausted: false,
+        };
+        const state = {
+            gameId: 'metadata-test',
+            phase: 'action',
+            roundNumber: 1,
+            actionNumber: 1,
+            activePlayerId: 'player-0',
+            initiativePlayerId: 'player-0',
+            isComplete: false,
+            winnerNames: [],
+            players: {
+                'player-0': {
+                    id: 'player-0',
+                    name: 'player0',
+                    hasInitiative: true,
+                    isActivePlayer: true,
+                    availableResources: 2,
+                    resourcesTotal: 2,
+                    handCount: 0,
+                    deckCount: 0,
+                    discardCount: 0,
+                    base: card,
+                    leader: undefined,
+                    hand: [],
+                    discard: [],
+                    resources: [],
+                    groundArena: [],
+                    spaceArena: [],
+                    prompt: {},
+                },
+                'player-1': {
+                    id: 'player-1',
+                    name: 'player1',
+                    hasInitiative: false,
+                    isActivePlayer: false,
+                    availableResources: 2,
+                    resourcesTotal: 2,
+                    handCount: 1,
+                    deckCount: 0,
+                    discardCount: 0,
+                    base: undefined,
+                    leader: undefined,
+                    hand: [{ ...card, controllerId: 'player-1', ownerId: 'player-1' }],
+                    discard: [],
+                    resources: [],
+                    groundArena: [],
+                    spaceArena: [],
+                    prompt: {},
+                },
+            },
+        };
+
+        const tensor = encoder.encode(state, 'player-0');
+        const firstPlayerBaseOffset = 13 + 11;
+        const playerBlockSize = 11 + (2 + 5 * 24) * simulationCardFeatureCount;
+        const secondPlayerOffset = 13 + playerBlockSize;
+        const secondPlayerHandOffset = secondPlayerOffset + 11 + (2 + 3 * 24) * simulationCardFeatureCount;
+        const indexOf = (values: readonly string[], value: string) => values.indexOf(value);
+
+        expect(tensor.length).toBe(simulationObservationTensorSize);
+        expect(tensor[firstPlayerBaseOffset + simulationCardFeatureOffsets.printedCost]).toBe(0.1);
+        expect(tensor[firstPlayerBaseOffset + simulationCardFeatureOffsets.upgradePower]).toBe(0);
+        expect(tensor[firstPlayerBaseOffset + simulationCardFeatureOffsets.upgradeHp]).toBe(0);
+        expect(tensor[
+            firstPlayerBaseOffset +
+            simulationCardFeatureOffsets.type +
+            indexOf(simulationCardMetadataVocabularies.types, 'upgrade')
+        ]).toBe(1);
+        expect(tensor[
+            firstPlayerBaseOffset +
+            simulationCardFeatureOffsets.aspect +
+            indexOf(simulationCardMetadataVocabularies.aspects, 'vigilance')
+        ]).toBe(1);
+        expect(tensor[
+            firstPlayerBaseOffset +
+            simulationCardFeatureOffsets.trait +
+            indexOf(simulationCardMetadataVocabularies.traits, 'item')
+        ]).toBe(1);
+        expect(tensor[
+            firstPlayerBaseOffset +
+            simulationCardFeatureOffsets.trait +
+            indexOf(simulationCardMetadataVocabularies.traits, 'weapon')
+        ]).toBe(1);
+        expect(tensor[secondPlayerHandOffset + simulationCardFeatureOffsets.identityRevealed]).toBe(0);
+        expect(tensor[secondPlayerHandOffset + simulationCardFeatureOffsets.identityHash]).toBe(0);
+        expect(tensor[
+            secondPlayerHandOffset +
+            simulationCardFeatureOffsets.type +
+            indexOf(simulationCardMetadataVocabularies.types, 'upgrade')
+        ]).toBe(0);
+        expect(tensor[
+            secondPlayerHandOffset +
+            simulationCardFeatureOffsets.trait +
+            indexOf(simulationCardMetadataVocabularies.traits, 'weapon')
+        ]).toBe(0);
     });
 
     it('exports and restores a checkpoint after reset', async function() {
