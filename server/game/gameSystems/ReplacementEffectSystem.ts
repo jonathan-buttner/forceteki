@@ -129,11 +129,12 @@ export class ReplacementEffectSystem<TContext extends TriggeredAbilityContext = 
             return false;
         }
 
-        if (!this.shouldReplace(context, additionalProperties)) {
+        const properties = this.generatePropertiesFromContext(context, additionalProperties);
+        if (properties.canReplace && !properties.canReplace(context)) {
             return false;
         }
 
-        const { replacementImmediateEffect: replacementGameAction } = this.generatePropertiesFromContext(context);
+        const replacementGameAction = this.getReplacementImmediateEffect(context, additionalProperties);
 
         return (
             (!replacementGameAction || replacementGameAction.hasLegalTarget(context, additionalProperties, GameStateChangeRequired.None))

@@ -34,12 +34,13 @@ export default class Shield extends TokenUpgradeCard {
     public override setupCardAbilities(registrar: IUpgradeAbilityRegistrar, AbilityHelper: IAbilityHelper) {
         const canReplaceDamage = (context: TriggeredAbilityContext) =>
             context.source.isUpgrade() &&
+            context.source.isInPlay() &&
             context.source.isAttached() &&
             context.event.card === context.source.parentCard;
 
         registrar.addDamageModificationAbility({
             title: 'Defeat Shield to prevent attached unit from taking damage',
-            contextTitle: (context) => `Defeat ${this.title} to prevent ${context.source.isAttached() ? context.source.parentCard.title : 'attached unit'} from taking damage`,
+            contextTitle: (context) => `Defeat ${this.title} to prevent ${context.source.isInPlay() && context.source.isAttached() ? context.source.parentCard.title : 'attached unit'} from taking damage`,
             modificationType: DamageModificationType.Replace,
             canReplace: canReplaceDamage,
             shouldCardHaveDamageModification: (card, context) => canReplaceDamage(context) && card === context.event.card,
