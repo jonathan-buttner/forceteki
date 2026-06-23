@@ -1,3 +1,4 @@
+import { SimulationBoundary } from '../../../../../server/game/simulation';
 
 describe('Han Solo Has His Moments', function () {
     integration(function (contextRef) {
@@ -122,6 +123,17 @@ describe('Han Solo Has His Moments', function () {
                 expect(context.battlefieldMarine).toBeInZone('discard');
                 expect(context.hanSolo.damage).toBe(3);
                 expect(context.player2).toBeActivePlayer();
+            });
+
+            it('does not expose the piloting trigger to simulation when played as a unit', function () {
+                const { context } = contextRef;
+                const boundary = new SimulationBoundary();
+
+                context.player1.clickCard(context.hanSolo);
+                context.player1.clickPrompt('Play Han Solo');
+
+                expect(() => boundary.buildNextDecisionSnapshot(context.game)).not.toThrow();
+                context.player1.clickPrompt('Pass');
             });
         });
     });
