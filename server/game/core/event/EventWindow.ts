@@ -175,10 +175,21 @@ export class EventWindow extends BaseStepWithPipeline {
      */
     private generateContingentEventsAndReplacementWindow() {
         let contingentEvents = [];
-        this._events.forEach((event) => {
-            contingentEvents = contingentEvents.concat(event.generateContingentEvents());
-        });
-        contingentEvents.forEach((event) => this.addEvent(event));
+        const eventsToGenerateFrom = [...this._events];
+
+        let i = 0;
+        while (i < eventsToGenerateFrom.length) {
+            if (i > 1000) {
+                throw new Error(`Infinite loop detected in contingent event generation in event window ${this}. Last event in list: ${eventsToGenerateFrom[i].name}`);
+            }
+
+            const newContingentEvents = eventsToGenerateFrom[i].generateContingentEvents();
+            newContingentEvents.forEach((event) => this.addEvent(event));
+            contingentEvents = contingentEvents.concat(newContingentEvents);
+            eventsToGenerateFrom.push(...newContingentEvents);
+
+            i++;
+        }
 
         const replacementEffectWindow = new ReplacementEffectWindow(this.game);
         replacementEffectWindow.addTriggeringEvents(contingentEvents);
