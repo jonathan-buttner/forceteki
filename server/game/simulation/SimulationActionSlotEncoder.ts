@@ -1,6 +1,6 @@
 import type { SimulationActionSlot, SimulationDecisionSnapshot, SimulationLegalDecision } from './SimulationTypes';
 
-export const simulationNumDistinctActions = 512;
+export const simulationNumDistinctActions = 4096;
 
 export class SimulationActionSlotEncoder {
     public encode(snapshot: SimulationDecisionSnapshot): {

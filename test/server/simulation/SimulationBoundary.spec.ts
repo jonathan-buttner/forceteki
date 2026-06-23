@@ -362,6 +362,60 @@ describe('SimulationBoundary', function() {
         restored.close();
     });
 
+    it('encodes Galen-sized dropdown prompts within the supported action slots', function() {
+        const encoder = new SimulationActionSlotEncoder();
+        const legalDecisions = Array.from({ length: 1827 }, (_unused, index) => ({
+            id: `dropdown-card-${index}`,
+            playerId: 'player-0',
+            kind: 'dropdown' as const,
+            label: `Choose Card ${index}`,
+            rawDecision: {
+                kind: 'dropdown' as const,
+                playerId: 'player-0',
+                value: `Card ${index}`,
+            },
+        }));
+
+        const { slots, decisionsByActionId } = encoder.encode({
+            playerId: 'player-0',
+            legalDecisions,
+            state: {
+                gameId: 'galen-dropdown',
+                roundNumber: 1,
+                actionNumber: 0,
+                isComplete: false,
+                winnerNames: [],
+                players: {
+                    'player-0': {
+                        id: 'player-0',
+                        name: 'player0',
+                        hasInitiative: true,
+                        isActivePlayer: true,
+                        availableResources: 0,
+                        resourcesTotal: 0,
+                        handCount: 0,
+                        deckCount: 0,
+                        discardCount: 0,
+                        hand: [],
+                        discard: [],
+                        resources: [],
+                        groundArena: [],
+                        spaceArena: [],
+                        prompt: {
+                            menuTitle: 'Choose an option from the list',
+                            promptTitle: 'Galen Erso',
+                        },
+                    },
+                },
+            },
+        });
+
+        expect(slots.length).toBe(1827);
+        expect(decisionsByActionId.size).toBe(1827);
+        expect(slots[0].actionId).toBe(0);
+        expect(slots[slots.length - 1].actionId).toBe(1826);
+    });
+
     it('fails loudly when a prompt exports more than the supported action slots', function() {
         const encoder = new SimulationActionSlotEncoder();
         const legalDecisions = Array.from({ length: simulationNumDistinctActions + 1 }, (_unused, index) => ({
