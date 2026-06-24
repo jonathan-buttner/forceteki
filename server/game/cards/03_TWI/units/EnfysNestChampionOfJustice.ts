@@ -21,7 +21,7 @@ export default class EnfysNestChampionOfJustice extends NonLeaderUnitCard {
             optional: true,
             targetResolver: {
                 controller: RelativePlayer.Opponent,
-                cardCondition: (card, context) => card.isNonLeaderUnit() && card.getPower() < context.source.getPower(),
+                cardCondition: (card, context) => context.source.isInPlay() && card.isNonLeaderUnit() && card.getPower() < context.source.getPower(),
                 immediateEffect: AbilityHelper.immediateEffects.returnToHand()
             }
         });

@@ -45,6 +45,32 @@ describe('Enfys Nest, Champion of Justice', function () {
                 expect(context.player2).toBeActivePlayer();
                 expect(context.atst).toBeInZone('hand');
             });
+
+            it('does not try to read her power if she leaves play before choosing a target', async function () {
+                await contextRef.setupTestAsync({
+                    phase: 'action',
+                    player1: {
+                        hand: ['enfys-nest#champion-of-justice'],
+                    },
+                    player2: {
+                        groundArena: ['battlefield-marine']
+                    }
+                });
+
+                const { context } = contextRef;
+
+                context.player1.clickCard(context.enfysNest);
+
+                expect(context.player1).toBeAbleToSelect(context.battlefieldMarine);
+
+                context.player1.moveCard(context.enfysNest, 'discard');
+
+                expect(context.player1).not.toBeAbleToSelect(context.battlefieldMarine);
+                context.player1.clickPrompt('Pass');
+
+                expect(context.enfysNest).toBeInZone('discard');
+                expect(context.battlefieldMarine).toBeInZone('groundArena');
+            });
         });
     });
 });
