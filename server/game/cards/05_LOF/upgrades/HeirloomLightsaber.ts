@@ -17,7 +17,7 @@ export default class HeirloomLightsaber extends UpgradeCard {
 
         // If attached unit is a Force unit, it gains Restore 1
         registrar.addGainKeywordTargetingAttached({
-            gainCondition: (context) => context.source.parentCard?.hasSomeTrait(Trait.Force),
+            gainCondition: (context) => context.source.isAttached() && context.source.parentCard.hasSomeTrait(Trait.Force),
             keyword: KeywordName.Restore,
             amount: 1
         });

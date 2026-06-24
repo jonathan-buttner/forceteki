@@ -17,7 +17,7 @@ export default class CorruptedSaber extends UpgradeCard {
 
         registrar.addGainOnAttackAbilityTargetingAttached({
             title: 'The defender gets -2/-0 for this attack',
-            gainCondition: (context) => context.source.parentCard?.hasSomeTrait(Trait.Force),
+            gainCondition: (context) => context.source.isAttached() && context.source.parentCard.hasSomeTrait(Trait.Force),
             immediateEffect: AbilityHelper.immediateEffects.forThisAttackCardEffect((context) => ({
                 target: (context.event.attack as Attack).getAllTargets(),
                 effect: AbilityHelper.ongoingEffects.modifyStats({ power: -2, hp: 0 })

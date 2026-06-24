@@ -17,7 +17,7 @@ export default class JediLightsaber extends UpgradeCard {
 
         registrar.addGainOnAttackAbilityTargetingAttached({
             title: 'Give the defender -2/-2 for this phase',
-            gainCondition: (context) => context.source.parentCard?.hasSomeTrait(Trait.Force),
+            gainCondition: (context) => context.source.isAttached() && context.source.parentCard.hasSomeTrait(Trait.Force),
 
             // need to check if the target is a base - if so, don't apply the stat modifier effect
             immediateEffect: AbilityHelper.immediateEffects.conditional({

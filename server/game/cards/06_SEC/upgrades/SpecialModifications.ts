@@ -18,7 +18,7 @@ export default class SpecialModifications extends UpgradeCard {
             title: 'Create a Spy token',
             optional: true,
             immediateEffect: abilityHelper.immediateEffects.conditional({
-                condition: (context) => context.source.parentCard?.hasSomeTrait(Trait.Transport),
+                condition: (context) => context.source.isAttached() && context.source.parentCard.hasSomeTrait(Trait.Transport),
                 onTrue: abilityHelper.immediateEffects.createSpy()
             })
         });

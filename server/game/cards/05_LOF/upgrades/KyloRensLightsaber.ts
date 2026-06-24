@@ -17,7 +17,7 @@ export default class KyloRensLightsaber extends UpgradeCard {
 
         registrar.addReplacementEffectAbilityTargetingAttached({
             title: 'This unit can\'t be exhausted by enemy card abilities',
-            gainCondition: (context) => context.source.parentCard?.hasSomeTrait(Trait.Force),
+            gainCondition: (context) => context.source.isAttached() && context.source.parentCard.hasSomeTrait(Trait.Force),
             when: {
                 onCardExhausted: (event, context) =>
                     event.card === context.source &&

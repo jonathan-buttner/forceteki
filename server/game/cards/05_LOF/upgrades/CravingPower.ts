@@ -21,7 +21,7 @@ export default class CravingPower extends UpgradeCard {
                 zoneFilter: WildcardZoneName.AnyArena,
                 cardTypeFilter: WildcardCardType.Unit,
                 immediateEffect: AbilityHelper.immediateEffects.damage((context) => ({
-                    amount: context.source.parentCard?.getPower()
+                    amount: context.source.isAttached() ? context.source.parentCard.getPower() : 0
                 })),
             }
         });

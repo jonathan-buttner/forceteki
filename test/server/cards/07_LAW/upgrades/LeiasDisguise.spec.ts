@@ -80,5 +80,34 @@ describe('Leia\'s Disguise', function () {
             expect(context.player2).toBeActivePlayer();
             expect(context.battlefieldMarine).not.toHaveExactUpgradeNames(['shield']);
         });
+
+        it('does not assert if trigger legality is checked after it is unattached', async function () {
+            await contextRef.setupTestAsync({
+                phase: 'action',
+                player1: {
+                    hand: ['haymaker'],
+                    groundArena: [{
+                        card: 'leia-organa#defiant-princess',
+                        upgrades: ['leias-disguise']
+                    }]
+                },
+                player2: {
+                    groundArena: ['atst']
+                }
+            });
+
+            const { context } = contextRef;
+
+            context.leiasDisguise.unattach();
+            context.player1.moveCard(context.leiasDisguise, 'discard');
+
+            expect(() => context.player1.clickCard(context.haymaker)).not.toThrow();
+            expect(context.player1).toBeAbleToSelectExactly([context.leiaOrgana]);
+            context.player1.clickCard(context.leiaOrgana);
+            expect(context.player1).toBeAbleToSelectExactly([context.atst]);
+            context.player1.clickCard(context.atst);
+
+            expect(context.player2).toBeActivePlayer();
+        });
     });
 });

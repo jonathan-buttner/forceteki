@@ -20,7 +20,7 @@ export default class Condemn extends UpgradeCard {
 
         registrar.addGainOnAttackAbilityTargetingAttached({
             title: `The defending player discloses ${TextHelper.aspectList(aspects)} to give this unit -6/-0 for this attack`,
-            gainCondition: (context) => context.source.parentCard?.isAttacking(),
+            gainCondition: (context) => context.source.isAttached() && context.source.parentCard.isAttacking(),
             immediateEffect: AbilityHelper.immediateEffects.disclose((context) => ({
                 activePromptTitle: `Disclose ${TextHelper.aspectList(aspects)} to give ${context.source.title} -6/-0 for this attack`,
                 aspects: aspects,

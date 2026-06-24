@@ -15,7 +15,7 @@ export default class LukesJediLightsaberConstructedByHand extends UpgradeCard {
         registrar.setAttachCondition((context) => !context.attachTarget.hasSomeTrait(Trait.Vehicle));
 
         registrar.addGainKeywordTargetingAttached({
-            gainCondition: (context) => context.source.parentCard?.title === 'Luke Skywalker',
+            gainCondition: (context) => context.source.isAttached() && context.source.parentCard.title === 'Luke Skywalker',
             keyword: KeywordName.Sentinel
         });
     }
