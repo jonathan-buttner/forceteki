@@ -20,7 +20,7 @@ export default class GreySquadronYWing extends NonLeaderUnitCard {
                 cardTypeFilter: [WildcardCardType.Unit, CardType.Base],
             },
             then: (context) => ({
-                title: `Deal 2 damage to ${context.target.title}`,
+                title: `Deal 2 damage to ${context.target?.title ?? 'it'}`,
                 optional: true,
                 immediateEffect: AbilityHelper.immediateEffects.damage({
                     target: context.target,

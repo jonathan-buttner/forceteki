@@ -22,7 +22,7 @@ export default class JabbasRancorSnackTime extends NonLeaderUnitCard {
                 zoneFilter: ZoneName.GroundArena,
             },
             then: (context) => ({
-                title: `Deal 7 damage to ${context.target.title}`,
+                title: `Deal 7 damage to ${context.target?.title ?? 'that unit'}`,
                 optional: true,
                 immediateEffect: abilityHelper.immediateEffects.damage({
                     target: context.target,
