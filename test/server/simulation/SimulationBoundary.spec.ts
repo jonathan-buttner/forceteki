@@ -11,6 +11,7 @@ import {
     simulationNumDistinctActions,
     simulationObservationTensorSize,
 } from '../../../server/game/simulation';
+import { StatefulPromptType } from '../../../server/game/core/gameSteps/PromptInterfaces';
 import type { SimulationEnvironmentState } from '../../../server/game/simulation';
 
 function withoutPromptUuids(state: SimulationEnvironmentState): SimulationEnvironmentState {
@@ -101,6 +102,51 @@ describe('SimulationBoundary', function() {
         expect(decision!.card?.uuid).toBe('card-1');
         expect(decision!.card?.selected).toBeTrue();
         expect(decision!.card?.selectable).toBeFalse();
+    });
+
+    it('allows indirect damage distribution overkill on bases', function() {
+        const exporter = new SimulationLegalDecisionExporter();
+        const damagedUnit = {
+            uuid: 'unit-1',
+            internalName: 'damaged-unit',
+            title: 'Damaged Unit',
+            damage: 3,
+            remainingHp: 2,
+            isUnit: () => true,
+        };
+        const base = {
+            uuid: 'base-1',
+            internalName: 'base',
+            title: 'Base',
+            damage: 27,
+            getHp: () => 30,
+            isUnit: () => false,
+        };
+        const legalDecisions = exporter.exportForPlayer({
+            id: 'player-0',
+            currentPrompt: () => ({
+                menuTitle: 'Distribute 12 indirect damage among targets',
+                promptUuid: 'prompt-1',
+                distributeAmongTargets: {
+                    type: StatefulPromptType.DistributeIndirectDamage,
+                    amount: 12,
+                    maxTargets: null,
+                    canChooseNoTargets: false,
+                    canDistributeLess: false,
+                    isIndirectDamage: true,
+                },
+            }),
+            selectableCards: [damagedUnit, base],
+            selectedCards: [],
+        } as any);
+
+        const decision = legalDecisions.find((decision) => decision.rawDecision.kind === 'stateful-prompt');
+
+        expect(decision).toBeDefined();
+        expect(decision!.rawDecision.cardDistribution).toEqual([
+            { uuid: 'unit-1', amount: 2 },
+            { uuid: 'base-1', amount: 10 },
+        ]);
     });
 
     it('resets to deterministic legal action slots and fixed observation tensors', async function() {

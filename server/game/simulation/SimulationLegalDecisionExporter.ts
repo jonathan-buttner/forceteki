@@ -235,8 +235,8 @@ export class SimulationLegalDecisionExporter {
         const selected: Array<{ uuid: string; amount: number }> = [];
 
         for (const card of cards.slice(0, Math.max(1, maxTargets))) {
-            const capacity = isIndirectDamage
-                ? Math.max(0, ((card as any).getHp?.() ?? amount) - ((card as any).damage ?? 0))
+            const capacity = isIndirectDamage && card.isUnit()
+                ? Math.max(0, card.remainingHp)
                 : amount;
             const assigned = Math.min(capacity, remaining);
             if (assigned > 0) {
