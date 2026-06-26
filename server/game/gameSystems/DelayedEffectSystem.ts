@@ -124,7 +124,15 @@ export class DelayedEffectSystem<TContext extends AbilityContext = AbilityContex
 
     public override hasLegalTarget(context: TContext, additionalProperties: Partial<IDelayedEffectProperties> = {}): boolean {
         const properties = this.generatePropertiesFromContext(context, additionalProperties);
-        return properties.immediateEffect != null;
+        if (properties.immediateEffect == null) {
+            return false;
+        }
+
+        if (properties.delayedEffectType === DelayedEffectType.Card) {
+            return Helpers.asArray(properties.target).length === 1;
+        }
+
+        return true;
     }
 
     public override queueGenerateEventGameSteps(events: GameEvent[], context: TContext, additionalProperties: Partial<IDelayedEffectProperties>): void {

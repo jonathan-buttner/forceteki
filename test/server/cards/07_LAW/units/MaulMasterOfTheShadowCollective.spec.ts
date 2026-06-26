@@ -64,6 +64,22 @@ describe('Maul, Master of the Shadow Collective', function() {
                 expect(context.atatSuppressor.controller).toBe(context.player1Object);
             });
 
+            it('should not create a delayed effect if the player chooses no target', function () {
+                const { context } = contextRef;
+
+                context.player1.clickCard(context.maul);
+                context.player1.clickCard(context.p2Base);
+
+                expect(context.player1).toBeAbleToSelectExactly([context.wampa, context.atatSuppressor, context.atst, context.ravenousRathtar]);
+                context.player1.clickPrompt('Choose nothing');
+
+                expect(context.wampa.controller).toBe(context.player2Object);
+                expect(context.atatSuppressor.controller).toBe(context.player2Object);
+                expect(context.atst.controller).toBe(context.player2Object);
+                expect(context.ravenousRathtar.controller).toBe(context.player2Object);
+                expect(context.player2).toBeActivePlayer();
+            });
+
             it('should not trigger if he did not deal combat damage to a base', function () {
                 const { context } = contextRef;
 
