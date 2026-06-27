@@ -12,6 +12,7 @@ export interface ICardWithDamageProperty extends ICardWithPrintedHpProperty {
     setActiveAttack(attack: Attack);
     unsetActiveAttack();
     isDefending(): boolean;
+    canHaveActiveAttack(): boolean;
     get activeAttack(): Attack;
     get damage(): number;
     get remainingHp(): number;
@@ -154,4 +155,3 @@ export function WithDamage<TBaseClass extends CardConstructor>(BaseClass: TBaseC
 
     return WithDamage;
 }
-

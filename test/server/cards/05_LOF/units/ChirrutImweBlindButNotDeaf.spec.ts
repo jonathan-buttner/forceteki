@@ -34,6 +34,33 @@ describe('Chirrut Imwe, Blind, but not Deaf', function() {
                 expect(context.p1Base.damage).toBe(3);
             });
 
+            it('should not crash if the attacker leaves play before the Force is used', async function () {
+                await contextRef.setupTestAsync({
+                    phase: 'action',
+                    player1: {
+                        groundArena: ['chirrut-imwe#blind-but-not-deaf', 'perimeter-atrt'],
+                        hasForceToken: true,
+                    },
+                    player2: {
+                        groundArena: ['bold-recon-commando'],
+                        hasInitiative: true,
+                    }
+                });
+
+                const { context } = contextRef;
+
+                context.player2.clickCard(context.boldReconCommando);
+                context.player2.clickCard(context.chirrutImwe);
+                context.player2.clickPrompt('You');
+                expect(context.player1).toHavePassAbilityPrompt('Use the Force to give -2/-0 to the attacker for this attack');
+
+                context.player2.moveCard(context.boldReconCommando, 'discard');
+                context.player1.clickPrompt('Trigger');
+
+                expect(context.boldReconCommando).toBeInZone('discard');
+                expect(context.player1).toHavePrompt('Choose an action');
+            });
+
             it('should not give -2/-0 to the attacker if the Force is not used', async function () {
                 await contextRef.setupTestAsync({
                     phase: 'action',

@@ -30,16 +30,23 @@ export class CardAttackLastingEffectSystem<TContext extends AbilityContext = Abi
     }
 
     public override updateEvent(event: GameEvent, target: any, context: TContext, additionalProperties?: Partial<ICardAttackLastingEffectProperties>): void {
-        Contract.assertNotNullLike(target.activeAttack, `Attempting to apply an attack lasting effect to ${target.internalName} but it is not actively attacking`);
+        Contract.assertTrue(
+            target.isUnit() && target.canHaveActiveAttack() && target.activeAttack != null,
+            `Attempting to apply an attack lasting effect to ${target.internalName} but it is not actively attacking`
+        );
 
         return super.updateEvent(event, target, context, additionalProperties);
     }
 
-    public override canAffectInternal(card: Card, context: TContext) {
+    public override canAffectInternal(card: Card, context: TContext, additionalProperties: Partial<ICardAttackLastingEffectProperties> = {}) {
         if (!card.isUnit()) {
             return false;
         }
 
-        return super.canAffectInternal(card, context);
+        if (!card.canHaveActiveAttack() || card.activeAttack == null) {
+            return false;
+        }
+
+        return super.canAffectInternal(card, context, additionalProperties);
     }
 }
