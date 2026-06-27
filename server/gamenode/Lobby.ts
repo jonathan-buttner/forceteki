@@ -1751,11 +1751,29 @@ export class Lobby {
         }
         const [player1, player2] = players;
 
-        // Validate that lobby users are attached to players
-        Contract.assertNotNullLike(player1.lobbyUser, `Lobby ${this.id}: player1 ${player1.id} has no lobbyUser attached at stats send time`);
-        Contract.assertNotNullLike(player2.lobbyUser, `Lobby ${this.id}: player2 ${player2.id} has no lobbyUser attached at stats send time`);
-        Contract.assertNotNullLike(player1.lobbyDeck, `Lobby ${this.id}: player1 ${player1.id} has no deck assigned at stats send time`);
-        Contract.assertNotNullLike(player2.lobbyDeck, `Lobby ${this.id}: player2 ${player2.id} has no deck assigned at stats send time`);
+        const missingStatsMetadata: string[] = [];
+        if (!player1.lobbyUser) {
+            missingStatsMetadata.push(`player1 ${player1.id} lobbyUser`);
+        }
+        if (!player2.lobbyUser) {
+            missingStatsMetadata.push(`player2 ${player2.id} lobbyUser`);
+        }
+        if (!player1.lobbyDeck) {
+            missingStatsMetadata.push(`player1 ${player1.id} lobbyDeck`);
+        }
+        if (!player2.lobbyDeck) {
+            missingStatsMetadata.push(`player2 ${player2.id} lobbyDeck`);
+        }
+        if (missingStatsMetadata.length > 0) {
+            logger.warn(`Lobby ${this.id}: Skipping deck stats update because game-end player metadata is incomplete`, {
+                lobbyId: this.id,
+                gameId: game.id,
+                missingStatsMetadata
+            });
+            this.sendStatsMessageToUser(player1.id, player1KarabastStatus);
+            this.sendStatsMessageToUser(player2.id, player2KarabastStatus);
+            return;
+        }
 
         // SWUStats
         const player1SwuStatsStatus = player1.lobbyDeck?.deckSource === DeckSource.SWUStats
