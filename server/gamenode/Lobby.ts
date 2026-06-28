@@ -2267,9 +2267,32 @@ export class Lobby {
     public sendGameState(game: Game, forceSend = false): void {
         // we send the game state to all users and spectators
         // if the message is ack'd, we set the user state to connected in case they were incorrectly marked as disconnected
+        let liveSimulationState: SimulationEnvironmentState | null | undefined;
+        const getLiveSimulationState = (): SimulationEnvironmentState | null => {
+            if (liveSimulationState !== undefined) {
+                return liveSimulationState;
+            }
+            try {
+                liveSimulationState = this.exportLiveSimulationState();
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                if (!message.includes('No actionable player is available')) {
+                    logger.error('Lobby: failed to export live simulation state', { lobbyId: this.id, error: message });
+                }
+                liveSimulationState = null;
+            }
+            return liveSimulationState;
+        };
+
         for (const user of this.users) {
             if (user.socket && (user.socket.socket.connected || forceSend)) {
                 user.socket.send('gamestate', game.getState(user.id), () => this.safeSetUserConnected(user.id));
+                if (this.socketWantsLiveSimulationState(user.socket)) {
+                    const simulationState = getLiveSimulationState();
+                    if (simulationState) {
+                        user.socket.send('simulationstate', simulationState);
+                    }
+                }
             }
         }
         for (const spectator of this.spectators) {
@@ -2277,6 +2300,14 @@ export class Lobby {
                 spectator.socket.send('gamestate', game.getState(spectator.id), () => this.safeSetUserConnected(spectator.id));
             }
         }
+    }
+
+    private socketWantsLiveSimulationState(socket: Socket): boolean {
+        const value = socket.socket.handshake?.query?.liveSimulationState;
+        if (Array.isArray(value)) {
+            return value.includes('true');
+        }
+        return value === 'true';
     }
 
     /**
