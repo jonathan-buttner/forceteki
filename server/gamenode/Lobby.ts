@@ -44,6 +44,11 @@ import {
     StatsSource,
     updateStatsMessage
 } from '../utils/stats/statsMessages';
+import { SimulationActionSlotEncoder } from '../game/simulation/SimulationActionSlotEncoder';
+import { SimulationBoundary } from '../game/simulation/SimulationBoundary';
+import { SimulationObservationTensorEncoder } from '../game/simulation/SimulationObservationTensorEncoder';
+import { SimulationStateEncoder } from '../game/simulation/SimulationStateEncoder';
+import type { SimulationEnvironmentState } from '../game/simulation/SimulationTypes';
 
 interface LobbySpectatorWrapper {
     id: string;
@@ -1062,6 +1067,86 @@ export class Lobby {
     // cleaned up. we need to refactor so that "null" doesn't have a special meaning separate from "undefined".
     public hasOngoingGame(): boolean {
         return this.game !== undefined;
+    }
+
+    public exportLiveSimulationState(): SimulationEnvironmentState {
+        if (!this.game) {
+            throw new Error(`Lobby ${this.id} does not have an ongoing game`);
+        }
+
+        const boundary = new SimulationBoundary();
+        const actionEncoder = new SimulationActionSlotEncoder();
+        const observationEncoder = new SimulationObservationTensorEncoder();
+        const stateEncoder = new SimulationStateEncoder();
+        const snapshot = this.game.isEnded ? null : boundary.buildNextDecisionSnapshot(this.game);
+        const state = snapshot?.state ?? stateEncoder.encode(this.game);
+        const playerIds = Object.keys(state.players).sort();
+        const firstPlayerId = playerIds[0] ?? this.users[0]?.id ?? '';
+        const secondPlayerId = playerIds[1] ?? this.users[1]?.id ?? firstPlayerId;
+        const observationTensors = [
+            observationEncoder.encode(state, firstPlayerId),
+            observationEncoder.encode(state, secondPlayerId),
+        ] as [number[], number[]];
+
+        if (state.isComplete || !snapshot) {
+            return {
+                currentPlayer: -4,
+                currentPlayerId: null,
+                isTerminal: true,
+                legalActions: [],
+                legalDecisions: [],
+                actionStrings: {},
+                returns: this.simulationReturns(),
+                observationTensor: observationTensors[0],
+                observationTensors,
+                state,
+            };
+        }
+
+        const { slots, decisionsByActionId } = actionEncoder.encode(snapshot);
+        const currentPlayer = Math.max(0, playerIds.indexOf(snapshot.playerId));
+        const actionStrings = Object.fromEntries(slots.map((slot) => [String(slot.actionId), slot.label]));
+        const legalDecisions = slots.map((slot) => {
+            const decision = decisionsByActionId.get(slot.actionId);
+            if (!decision) {
+                throw new Error(`Live simulation action slot ${slot.actionId} is missing its legal decision`);
+            }
+            return {
+                ...decision,
+                actionId: slot.actionId,
+            };
+        });
+
+        return {
+            currentPlayer,
+            currentPlayerId: snapshot.playerId,
+            isTerminal: false,
+            legalActions: slots.map((slot) => slot.actionId),
+            legalDecisions,
+            actionStrings,
+            returns: this.simulationReturns(),
+            observationTensor: observationTensors[currentPlayer],
+            observationTensors,
+            state,
+        };
+    }
+
+    private simulationReturns(): [number, number] {
+        const winnerNames = this.game?.winnerNames ?? [];
+
+        if (winnerNames.length !== 1 || this.users.length < 2) {
+            return [0, 0];
+        }
+
+        if (winnerNames[0] === this.users[0].username) {
+            return [1, -1];
+        }
+
+        if (winnerNames[0] === this.users[1].username) {
+            return [-1, 1];
+        }
+
+        return [0, 0];
     }
 
     public setLobbyOwner(id: string): void {

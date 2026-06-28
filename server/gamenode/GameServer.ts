@@ -1336,6 +1336,37 @@ export class GameServer {
             }
         });
 
+        app.post('/api/live-game/simulation-state', this.buildAuthMiddleware('live-game-simulation-state'), (req, res, next) => {
+            try {
+                const user = req.user as User;
+                const mapping = this.userLobbyMap.get(user.getId());
+                if (!mapping || mapping.role !== UserRole.Player) {
+                    return res.status(403).json({ success: false, message: 'Not a player in an active lobby' });
+                }
+
+                const lobby = this.lobbies.get(mapping.lobbyId);
+                if (!lobby) {
+                    return res.status(404).json({ success: false, message: 'Lobby not found' });
+                }
+                if (!lobby.hasOngoingGame()) {
+                    return res.status(409).json({ success: false, message: 'Lobby does not have an ongoing game' });
+                }
+
+                try {
+                    return res.status(200).json(lobby.exportLiveSimulationState());
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    if (message.includes('No actionable player is available')) {
+                        return res.status(409).json({ success: false, message });
+                    }
+                    throw error;
+                }
+            } catch (err) {
+                logger.error('GameServer (live-game-simulation-state) Server error:', err);
+                next(err);
+            }
+        });
+
         app.get('/api/ongoing-games', (_, res, next) => {
             try {
                 return res.json(this.getOngoingGamesData());
