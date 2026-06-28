@@ -26,7 +26,11 @@ export default class ChokeOnAspirations extends EventCard {
             }),
             ifYouDo: (ifYouDoContext) => ({
                 title: 'If it survives, heal damage from your base equal to the damage dealt this way',
-                ifYouDoCondition: () => !ifYouDoContext.events[1].willDefeat,
+                ifYouDoCondition: () => {
+                    const distributionEvent = ifYouDoContext.events[0];
+                    const damagedUnit = distributionEvent.individualEvents[0]?.card;
+                    return distributionEvent.totalDistributed > 0 && damagedUnit?.isInPlay();
+                },
                 immediateEffect: AbilityHelper.immediateEffects.heal({ amount: ifYouDoContext.events[0].totalDistributed, target: ifYouDoContext.player.base })
             })
         });

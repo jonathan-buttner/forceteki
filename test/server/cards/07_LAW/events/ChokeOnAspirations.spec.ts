@@ -93,6 +93,32 @@ describe('Choke On Aspirations', function () {
                 expect(context.p1Base.damage).toBe(6); // Base starts with 6 damage and should not heal because the unit was defeated
             });
 
+            it('should choose no target and not heal damage from your base', async function () {
+                await contextRef.setupTestAsync({
+                    phase: 'action',
+                    player1: {
+                        hand: ['choke-on-aspirations'],
+                        groundArena: ['battlefield-marine'],
+                        base: { card: 'chopper-base', damage: 6 }
+                    },
+                    player2: {
+                        groundArena: ['pyke-sentinel']
+                    }
+                });
+
+                const { context } = contextRef;
+
+                expect(context.p1Base.damage).toBe(6);
+                context.player1.clickCard(context.chokeOnAspirations);
+
+                context.player1.setDistributeDamagePromptState(new Map());
+
+                expect(context.player2).toBeActivePlayer();
+                expect(context.battlefieldMarine).toBeInZone('groundArena');
+                expect(context.battlefieldMarine.damage).toBe(0);
+                expect(context.p1Base.damage).toBe(6);
+            });
+
             it('should deal less than 5 damage to a friendly unit and heal damage that much damage from your base', async function () {
                 await contextRef.setupTestAsync({
                     phase: 'action',
